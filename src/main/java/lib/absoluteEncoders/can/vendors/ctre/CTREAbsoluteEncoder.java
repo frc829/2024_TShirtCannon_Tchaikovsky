@@ -1,14 +1,22 @@
 package lib.absoluteEncoders.can.vendors.ctre;
 
+import com.ctre.phoenix6.hardware.CANcoder;
+
+import edu.wpi.first.wpilibj.Encoder;
 import lib.absoluteEncoders.AbsoluteEncoder;
+import lib.motors.can.smart.vendors.ctre.complete.CTRECompleteAngularSmartMotorConfiguration;
 
 public class CTREAbsoluteEncoder implements AbsoluteEncoder {
 
-    // TODO: Braden: 63: create a CANcoder named cancoder
+    private final CANcoder cancoder;
 
-    public CTREAbsoluteEncoder(CTREAbsoluteEncoderConfiguration encoderConfig) {
-        // TODO: Braden: 64: initialize this cancoder using new CANcoder and the values in the config for deviceNumber and canbus
+    public CTREAbsoluteEncoder(CTRECompleteAngularSmartMotorConfiguration config) {
+
+        this.cancoder = new CANcoder(config.getDeviceNumber(), config.getCanbus());
+        cancoder.getConfigurator().apply(encoderConfig.getCANcoderConfiguration());
+        
         // TODO: Braden: 65: call cancoder.getConfigurator().apply() and pass in encoderConfig's getCANcoderConfiguration()
+
     }
 
     @Override
