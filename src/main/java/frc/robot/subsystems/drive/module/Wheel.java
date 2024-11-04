@@ -45,7 +45,9 @@ public class Wheel {
         controlRequest = new VelocityVoltage(0.0).withSlot(pidSlot);
     }
 
-    // TODO: create a method called getDistanceMeters that returns the position of the motor
+    public double getDistanceMeters() {
+        return motor.getPosition().getValueAsDouble();
+    }
 
     public double getVelocityMetersPerSecond() {
         return motor.getVelocity().getValueAsDouble();
