@@ -7,6 +7,10 @@ package frc.robot.subsystems.drive.module;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.SparkPIDController.ArbFFUnits;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 
@@ -36,7 +40,7 @@ public class Steer {
     private static final double dtSeconds = .02;
 
     private final CANSparkMax canSparkMax;
-    // TODO: Add CANcoder field
+    private final CANcoder canCoder;
     private final TrapezoidProfile trapezoidProfile;
     private final TrapezoidProfile.State goal = new TrapezoidProfile.State();
     private final SimpleMotorFeedforward simpleMotorFeedforward;
@@ -44,11 +48,13 @@ public class Steer {
 
     public Steer(int moduleNumber) {
         canSparkMax = new CANSparkMax(moduleNumber + 10, motortype);
-        // TODO: Initialize the new CANcoder field.  Should be 30 + moduleNumber.
-        // TODO: create a CANcoderConfiguration variable, intialize to a new one with no arguments.
-        // TODO: access the MagnetSensor.AbsoluteSensorRange and set to AbsoluteSensorRangeValue.Unsiged_0To1
-        // TODO: access the MagnetSensor.SensorDirection and set to SensorDirectionValue.CounterClockwise_Positive
-        // TODO: use the apply method of cancoder's getConfigurator() method and apply cancoderConfiguration
+        canCoder = new CANcoder(moduleNumber + 30);
+
+        CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
+        cancoderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1;
+        cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+        canCoder.getConfigurator().apply(cancoderConfig);
+
         canSparkMax.setIdleMode(Steer.mode);
         canSparkMax.setInverted(Steer.isInverted);
         canSparkMax.getEncoder().setPositionConversionFactor(2 * Math.PI / gearing);
@@ -70,9 +76,9 @@ public class Steer {
     }
 
     public void setPositionFromAbsolute() {
-        // TODO: create an absolutePositionRadians variable set it to Units.rotationsToRadians with the cancoder's getPosition value as the argument
-        // TODO: get the cansparkMax's encoder and setPosition to absolutePositionRadians
-        // TODO: set setpoint.position to absolutePositionRadians
+        double absolutePositionRadians = Units.rotationsToRadians(canCoder.getPosition().getValueAsDouble());
+        canSparkMax.getEncoder().setPosition(absolutePositionRadians);
+        setpoint.position = absolutePositionRadians;
     }
 
     public double getVelocityDegreesPerSecond() {
@@ -97,3 +103,5 @@ public class Steer {
     }
 
 }
+
+
