@@ -9,6 +9,7 @@ public class REV_MAXAbsoluteEncoderArmMotor extends REV_MAXArmMotor implements A
 
     // TODO: create an AbsoluteEncoder named revAbsoluteEncoder. private final.
 
+
     public REV_MAXAbsoluteEncoderArmMotor(REV_MAXArmMotorConfig config) {
         super(config);
         // TODO: initialize revAbsoluteEncoder to a new REVAbsoluteEncoder passing in getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle)

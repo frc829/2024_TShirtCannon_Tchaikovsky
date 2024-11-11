@@ -1,6 +1,15 @@
 package lib.motortypes.arms;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkPIDController.ArbFFUnits;
+
+import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.trajectory.ExponentialProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Unit;
+import edu.wpi.first.units.Velocity;
 import lib.motormechanisms.controlrequests.AngularPositionRequest;
 import lib.motormechanisms.controlrequests.AngularVelocityRequest;
 import lib.motormechanisms.controlrequests.CurrentRequest;
@@ -8,100 +17,104 @@ import lib.motormechanisms.controlrequests.VoltageRequest;
 import lib.motortypes.MotorControllerType;
 
 public class REV_MAXArmMotor extends CANSparkMax implements ArmMotor {
-    // TODO: Keith: Start Here.  Don't forget to import imports.
-    // TODO: create a ArmFeedforward object named feedforward.  private final.
-    // TODO: create  a Trapezoid object named trapezoidProfile. private final.
-    // TODO: create an ExponentialProfile named exponential profile.  private final.
-    // TODO: create a SlewRateLimiter named slewRateLimiter. private final.
-    // TODO: create a TrapezoidProfile.State named trapGoalState. private final. initialize to new Trapezoid.State();
-    // TODO: repeat for a variable named expoGoalState using ExponentialProfile.State
-    // TODO: create a TrapezoidPofile.State named lastTrapState.  Follows same logic as before.
-    // TODO: repeate for a variable named lastExpoState.  Same logic as before.
+    private final ArmFeedforward feedforward;
+    private final TrapezoidProfile trapezoid;
+    private final ExponentialProfile exponentialProfile;
+    private final SlewRateLimiter slewRateLimiter;
+    private final TrapezoidProfile.State trapGoalState = new TrapezoidProfile.State();
+    private final ExponentialProfile.State expoGoalState = new ExponentialProfile.State();
+    private TrapezoidProfile.State lastTrapState = new TrapezoidProfile.State();
+    private final ExponentialProfile.State lastExpoState = new ExponentialProfile.State();
 
     public REV_MAXArmMotor(REV_MAXArmMotorConfig config) {
         super(config.deviceNumber(), MotorType.kBrushless);
-        // TODO: call setInverted passing in invertedValue from config
-        // TODO: call setIdleMode passing in value from config.
-        // TODO: call getEncoder().setAverageDepth passing in value from config.
-        // TODO: call getEncoder().setMeasurementPeriod passing in value from config.
-        // TODO: call getEncoder().setPositionConversionFactor passing in 2 * Math.PI / sensorToMechanismRatio.
-        // sensorToMechanismRatio comes from config.
-        // TODO: call getEncoder().setVelocityConversionFactor passing in 2 * Math.PI / sensorToMechanismRatio / 60.0
-        // TODO: call getPIDController().setP, I, D for voltagePosition P, I, D using 0 for slotID.  These are 3 similar TODO's
-        // TODO: repeat for voltageVelocity PID using 1 for slotID.  These are 3 similar TODO's
-        // TODO: initialize feedforward to new ArmFeedforward passing in ks, kg, kv, ka from config.
-        // TODO: initialize trapezoidProfile to new TrapezoidProfile(new TrapezoidProfile.Constraints().  passing in maxVelocity and maxAcceleration from config.
-        // TODO: initialize exponentialProfile to a new ExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(12.0, voltageKv, voltageKa)
-        // TODO: initialize slewRateLimiter to new SlewRateLimiter passing in maxAcceleration from config
+        setInverted(config.invertedValue());
+        setIdleMode(config.idleMode());
+        getEncoder().setAverageDepth(config.averageDepth());
+        getEncoder().setMeasurementPeriod(config.samplePeriodMs());
+        getEncoder().setPositionConversionFactor(2 * Math.PI / config.sensorToMechanismRatio());
+        getEncoder().setVelocityConversionFactor(2 * Math.PI / config.sensorToMechanismRatio() / 60.0);
+        getPIDController().setP(config.voltagePositionKp(), 0);
+        getPIDController().setI(config.voltagePositionKi(), 0);
+        getPIDController().setD(config.voltagePositionKd(), 0);
+        getPIDController().setP(config.voltageVelocityKp(), 1);
+        getPIDController().setI(config.voltageVelocityKi(), 1);
+        getPIDController().setD(config.voltageVelocityKd(), 1);
+        feedforward = new ArmFeedforward(config.voltageKs(), config.voltageKg(), config.voltageKv(), config.voltageKa());
+        trapezoid = new TrapezoidProfile(new TrapezoidProfile.Constraints(config.maxVelocityRadPerSec(), config.maxAccelerationRadPerSecSquared()));
+        exponentialProfile = new ExponentialProfile(ExponentialProfile.Constraints.fromCharacteristics(12.0, config.voltageKv(), config.voltageKa()));
+        slewRateLimiter = new SlewRateLimiter(config.maxAccelerationRadPerSecSquared());
+        
     }
 
     @Override
     public int getCanId() {
-        // TODO: return getDeviceId();
-        return 0; // TODO: remove this placeholder.
+        return getDeviceId();
+       
     }
 
     @Override
     public String getCanNetworkName() {
-        // TODO: return "rio";
-        return null; // TODO: remove this placeholder.
+        return "rio";
     }
 
     @Override
     public MotorControllerType getMotorControllerType() {
-        // TODO: return MotorControllerType.REV_SPARK_MAX;
-        return null; // TODO: remove this placeholder.
+     
+        return MotorControllerType.REV_SPARK_FLEX;
     }
 
     @Override
     public double getCurrentAmps() {
-        // TODO: return getOutputCurrent();
-        return 0.0; // TODO: remove this placeholder.
+     
+        return getOutputCurrent();
 
     }
 
     @Override
     public double getVoltageVolts() {
-        // TODO: return getAppliedOutput() * getBusVoltage();
-        return 0.0; // TODO: remove this placeholder.
+    
+        return getAppliedOutput() * getBusVoltage();
     }
 
     @Override
     public double getAngleDegrees() {
-        // TODO: return Units.radiansToDegrees(getEncoder().getPosition);
-        return 0.0; // TODO: remove this placeholder.
+       
+        return Units.radiansToDegrees(getEncoder().getPosition());
 
     }
 
     @Override
     public void setAngleDegrees(double angleDegrees) {
-        // TODO: call getEncoder().setPosition passing in Units.degreesToRadians(angleDegrees)
+       
+        getEncoder().setPosition(Units.degreesToRadians(angleDegrees));
     }
 
     @Override
     public double getAngularVelocityDegreesPerSecond() {
-        // TODO: return Units.radiansToDegrees(getEncoder().getVelocity());
-        return 0.0; // TODO: remove this placeholder.
+      
+        return Units.radiansToDegrees(getEncoder().getVelocity());
     }
 
     @Override
     public void accept(VoltageRequest request) {
-        // TODO: call getPIDController().setReference passing in volts from request and ControlType.kVoltage
+        
+        getPIDController().setReference(request.getVolts(), ControlType.kVoltage);
     }
 
     @Override
     public void accept(CurrentRequest request) {
-        // TODO: call getPIDController().setReference passing in current from request and ControlType.kCurrent
+    
+        getPIDController().setReference(request.getCurrentAmps(), ControlType.kCurrent);
     }
 
     @Override
     public void acceptPositionVoltage(AngularPositionRequest request) {
-        // TODO: create a double feedforwardVoltage variable and initialize to feedfoward.calculate() passing in
-        // Units.degreesToRadians(getAngleDegrees) and 0.0
-        // TODO: call getPIDController().setReference passing in angle from request, ControlType.kPosition, 0, feedforwardVoltage, ArbFFUnits.kVoltage
-        // TODO: set lastTrapState.position to Units.degreesToRadians(getAngleDegrees)
-        // TODO: set lastTrapState.velocity similarly to position but for velocity.
-        // TODO: call trackExpoFromTrap()
+        double feedForwardVoltage = feedforward.calculate(Units.degreesToRadians(getAngleDegrees()), 0.0);
+        getPIDController().setReference(request.getAngleDegrees(), ControlType.kPosition, 0, feedForwardVoltage, ArbFFUnits.kVoltage);
+        lastTrapState.position = Units.degreesToRadians(getAngleDegrees());
+        lastTrapState.velocity = Units.degreesToRadians(getAngularVelocityDegreesPerSecond());
+        trackExpoFromTrap();
     }
 
 
@@ -113,6 +126,9 @@ public class REV_MAXArmMotor extends CANSparkMax implements ArmMotor {
         // TODO: create a double called feedForwardVoltage and get from feedfoward.calculate(Units.degreesToRadians(request.getAngleDegrees()), lastTrapState.velocity)
         // TODO: call getPIDController().setReference passing in lastTrapState.position, Controltype.kPosition, 0, feedforwardVoltags, ArbFFUnits.kVoltage
         // TODO: call trackExpoFromTrap()
+        trapGoalState.position = Units.degreesToRadians(request.getAngleDegrees());
+        trapGoalState.velocity = 0.0;
+        lastTrapState = trapezoid.calculate(0.020, lastTrapState, trapGoalState);
     }
 
     @Override
