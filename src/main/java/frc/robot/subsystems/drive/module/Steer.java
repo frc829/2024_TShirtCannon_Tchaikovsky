@@ -76,9 +76,9 @@ public class Steer {
     }
 
     public void setPositionFromAbsolute() {
-        // TODO: create an absolutePositionRadians variable set it to Units.rotationsToRadians with the cancoder's getPosition value as the argument
-        // TODO: get the cansparkMax's encoder and setPosition to absolutePositionRadians
-        // TODO: set setpoint.position to absolutePositionRadians
+        double absolutePositionRadians = Units.rotationsToRadians(canCoder.getPosition().getValueAsDouble());
+        canSparkMax.getEncoder().setPosition(absolutePositionRadians);
+        setpoint.position = absolutePositionRadians;
     }
 
     public double getVelocityDegreesPerSecond() {
