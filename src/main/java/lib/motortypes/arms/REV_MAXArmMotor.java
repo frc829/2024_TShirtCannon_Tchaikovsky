@@ -120,15 +120,14 @@ public class REV_MAXArmMotor extends CANSparkMax implements ArmMotor {
 
     @Override
     public void acceptTrapPositionVoltage(AngularPositionRequest request) {
-        // TODO: set trapGoalState.position to Units.degreesToRadians() passing in angle from request
-        // TODO: set trapGoalState.velocity to 0.0;
-        // TODO: set lastTrapState to trapezoidProfile.calculate(0.020, lastTrapState, trapGoalState)
-        // TODO: create a double called feedForwardVoltage and get from feedfoward.calculate(Units.degreesToRadians(request.getAngleDegrees()), lastTrapState.velocity)
-        // TODO: call getPIDController().setReference passing in lastTrapState.position, Controltype.kPosition, 0, feedforwardVoltags, ArbFFUnits.kVoltage
-        // TODO: call trackExpoFromTrap()
         trapGoalState.position = Units.degreesToRadians(request.getAngleDegrees());
         trapGoalState.velocity = 0.0;
         lastTrapState = trapezoid.calculate(0.020, lastTrapState, trapGoalState);
+        double feedForwardVoltage = feedforward.calculate(
+            Units.degreesToRadians(getAngleDegrees()), 
+            Units.degreesToRadians(getAngularVelocityDegreesPerSecond()));
+        getPIDController().setReference(lastTrapState.position, ControlType.kPosition, 0, feedForwardVoltage, ArbFFUnits.kVoltage);
+        trackExpoFromTrap();
     }
 
     @Override
