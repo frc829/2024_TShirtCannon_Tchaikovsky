@@ -132,12 +132,12 @@ public class REV_MAXArmMotor extends CANSparkMax implements ArmMotor {
 
     @Override
     public void acceptExpoPositionVoltage(AngularPositionRequest request) {
-        // TODO: set expoGoalState.position to Units.degreesToRadians() passing in angle from request
-        // TODO: set expoGoalState.velocity to 0.0;
-        // TODO: set lastExpoState to exponentialProfile.calculate(0.020, lastExpoState, expoGoalState)
-        // TODO: create a double called feedForwardVoltage and get from feedfoward.calculate(Units.degreesToRadians(request.getAngleDegrees()), lastExpoState.velocity)
-        // TODO: call getPIDController().setReference passing in lastExpoState.position, Controltype.kPosition, 0, feedforwardVoltags, ArbFFUnits.kVoltage
-        // TODO: call trackTrapFromExpo()
+        expoGoalState.position = Units.degreesToRadians(request.getAngleDegrees());
+        expoGoalState.velocity = 0.0;
+        lastExpoState = exponentialProfile.calculate(0.020, lastExpoState, expoGoalState);
+        double feedforwardVoltage = feedforward.calculate(Units.degreesToRadians(request.getAngleDegrees()), lastExpoState.velocity);
+        getPIDController().setReference(lastExpoState.position, ControlType.kPosition, 0, feedforwardVoltage, ArbFFUnits.kVoltage);
+        trackExpoFromTrap();
     }
 
 
@@ -150,6 +150,8 @@ public class REV_MAXArmMotor extends CANSparkMax implements ArmMotor {
         // TODO: set lastExpoState.position to lastTrapState.position
         // TODO: repeat for lastExpoState's velocity
         // TODO: call slewRateLimiter's reset method passing in lastTrapState.velocity
+        double feedForwardVoltage = feedforward.calculate(Units.degreesToRadians(getAngleDegrees(), Units.degreesToRadians(request.getAngularVelocityDegreesPerSecond())));
+        getPIDController().setReference(Units.degreesToRadians(request.getAngularVelocityDegreesPerSecond(), Contr))
     }
 
     @Override
